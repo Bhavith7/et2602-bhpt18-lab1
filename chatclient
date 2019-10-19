@@ -1,0 +1,48 @@
+#!/usr/bin/python3
+import socket
+import select
+import sys
+
+if len(sys.argv)!=3:
+	print("python chatclient ip:port nickname")
+	sys.exit(1)
+
+client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+
+cmd = sys.argv[1].split(':')
+ip = str(cmd[0])
+port = int(cmd[1])
+nickname = str(sys.argv[2])
+
+client_socket.connect((ip,port))
+res1 = client_socket.recv(1024).decode("utf-8")
+print(res1)
+
+
+client_socket.sendall('NICK '+nickname.encode('utf-8'))
+res2 = client_socket.recv(1024).decode("utf-8")
+print(res2)
+if res2 == 'ERROR malformed command':
+	print(res2)
+	sys.exit()
+
+
+while True:
+	try:
+		sockets_list = [sys.stdin,client_socket]
+		read_sockets,write_sockets,error_sockets = select.select(sockets_list,[],[])
+
+		for socket in read_sockets:
+			if socket == client_socket:
+				msg = socket.recv(2048)
+				print(msg)
+			else:
+				msg = sys.stdin.readline()
+				if msg == '\n':
+                           		continue
+           			else:
+			   		client_socket.sendall('MSG '+msg.encode('utf-8'))
+	except KeyboardInterrupt:
+                    break
+
+client_socket.close()
