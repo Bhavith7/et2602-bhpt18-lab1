@@ -1,0 +1,71 @@
+#!/usr/bin/python3
+import socket
+import sys
+from threading import Thread
+import re
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+if(len(sys.argv)!=2):
+	print("python chatserver ip:port")
+	sys.exit()
+
+cmds = str(sys.argv[1]).split(':')
+ip = str(cmds[0])
+port = int(cmds[1])
+
+server_socket.bind((ip,port))
+
+server_socket.listen(10)
+
+client_list=[]
+client_list.append(server_socket)
+
+
+def client_connection(connection,address):
+			
+	nickname = connection.recv(1024).decode('utf-8')
+	nick = nickname.replace('NICK ','')
+	if len(nick)<=12 and re.match("^[A-Za-z0-9\_]+$",nick) is not None:
+		connection.sendall('OK \n'.encode('utf-8'))
+	else:
+		connection.sendall('ERROR malformed command \n'.encode('utf-8'))
+		client_list.remove(connection)
+		sys.exit()
+	
+	while True:
+		try:		
+			message = connection.recv(2048).decode('utf-8')
+			msg = message.replace('MSG ','')
+		
+			if not msg:
+				connection.close()
+				break
+			else:
+				if len(msg) > 255 and re.match("^[A-za-z0-9\_]*$", msg) is not None:
+					connection.sendall('ERROR malformed message'.encode('utf-8'))
+			
+				else :
+					response = "MSG "+ nick +" "+ msg
+					broadcast(response,connection)
+		except KeyboardInterrupt:
+				break
+
+
+def broadcast(message,connection):
+	for sockets in client_list:
+		 if sockets != connection and sockets!= server_socket:
+            		try:
+                		sockets.sendall(message.encode('utf-8'))
+            		except KeyboardInterrupt:
+				break
+
+while True:
+	connection,address = server_socket.accept()
+	connection.sendall("Hello 1 \n".encode('utf-8'))
+	new_connection = Thread (target = client_connection,args=(connection,address))
+	new_connection.start()
+	new_connection.join()
+	
+server_socket.close()
+					
