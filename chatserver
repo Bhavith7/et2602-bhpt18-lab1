@@ -1,22 +1,30 @@
 #!/usr/bin/python3
 import socket
 import sys
-from threading import Thread
+import threading
 import re
 
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+#Checking for sufficient arguments
 if(len(sys.argv)!=2):
 	print("python chatserver ip:port")
 	sys.exit()
+
+
+#Creating a socket
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
 
 cmds = str(sys.argv[1]).split(':')
 ip = str(cmds[0])
 port = int(cmds[1])
 
+#Binds the server to entered ip address,port
 server_socket.bind((ip,port))
 
+#Listen to clients
 server_socket.listen(10)
+print("Server-listening:Waiting for connections")
 
 client_list=[]
 client_list.append(server_socket)
@@ -31,7 +39,7 @@ def client_connection(connection,address):
 	else:
 		connection.sendall('ERROR malformed command \n'.encode('utf-8'))
 		client_list.remove(connection)
-		sys.exit()
+		
 	
 	while True:
 		try:		
@@ -47,24 +55,26 @@ def client_connection(connection,address):
 					response = 'ERROR malformed message' + msg
 				else :
 					response = "MSG "+ nick +" "+ msg
-
-				broadcast(response,connection)
+					#print response
+					broadcast(response,connection)
 		except KeyboardInterrupt:
 				break
 
 
 def broadcast(message,connection):
 	for sockets in client_list:
-		 if sockets!= server_socket:
+		 if sockets != server_socket:
             		try:
                 		sockets.sendall(message.encode('utf-8'))
             		except KeyboardInterrupt:
 				break
+				sys.exit()
 
 while True:
 	connection,address = server_socket.accept()
 	connection.sendall("Hello 1 \n".encode('utf-8'))
-	new_connection = Thread (target = client_connection,args=(connection,address))
+	print("%s:%s is connected" % address)
+	new_connection = threading.Thread(target = client_connection,args=(connection,address))
 	new_connection.start()
 	
 	
