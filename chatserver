@@ -68,7 +68,7 @@ def broadcast(message,connection):
                 		sockets.sendall(message.encode('utf-8'))
             		except KeyboardInterrupt:
 				break
-				sys.exit()
+				
 
 while True:
 	connection,address = server_socket.accept()
