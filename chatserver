@@ -42,7 +42,7 @@ def client_connection(connection,address):
 				connection.close()
 				break
 			else:
-				if len(msg) > 255 and re.match("^[A-za-z0-9\_]*$", msg) is not None:
+				if len(msg) > 255 and re.match("^[A-za-z0-9\_]*$", msg) is None:
 					connection.sendall('ERROR malformed message'.encode('utf-8'))
 			
 				else :
