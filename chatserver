@@ -67,6 +67,8 @@ def broadcast(message,connection):
             		try:
                 		sockets.sendall(message.encode('utf-8'))
             		except KeyboardInterrupt:
+				sockets.close()
+				remove(sockets)
 				break
 				
 
