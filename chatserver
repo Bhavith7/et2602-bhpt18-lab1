@@ -42,11 +42,12 @@ def client_connection(connection,address):
 				connection.close()
 				break
 			else:
-				if len(msg) > 255 and re.match("^[A-za-z0-9\_]*$", msg) is None:
+				if len(msg) > 255 and re.match("^[A-za-z0-9\_]*$", msg) is not None:
 					connection.sendall('ERROR malformed message'.encode('utf-8'))
 			
 				else :
 					response = "MSG "+ nick +" "+ msg
+					print(response)
 					broadcast(response,connection)
 		except KeyboardInterrupt:
 				break
@@ -65,7 +66,7 @@ while True:
 	connection.sendall("Hello 1 \n".encode('utf-8'))
 	new_connection = Thread (target = client_connection,args=(connection,address))
 	new_connection.start()
-	new_connection.join()
+	
 	
 server_socket.close()
 					
