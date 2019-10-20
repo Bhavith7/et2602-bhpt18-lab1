@@ -44,18 +44,18 @@ def client_connection(connection,address):
 			else:
 				if len(msg) > 255 and re.match("^[A-za-z0-9\_]*$", msg) is not None:
 					connection.sendall('ERROR malformed message'.encode('utf-8'))
-			
+					response = 'ERROR malformed message' + msg
 				else :
 					response = "MSG "+ nick +" "+ msg
-					print(response)
-					broadcast(response,connection)
+
+				broadcast(response,connection)
 		except KeyboardInterrupt:
 				break
 
 
 def broadcast(message,connection):
 	for sockets in client_list:
-		 if sockets != connection and sockets!= server_socket:
+		 if sockets!= server_socket:
             		try:
                 		sockets.sendall(message.encode('utf-8'))
             		except KeyboardInterrupt:
