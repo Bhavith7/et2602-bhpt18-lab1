@@ -58,7 +58,7 @@ def client_connection(connection,address):
 					#print response
 					broadcast(response,connection)
 		except KeyboardInterrupt:
-				break
+			break
 
 
 def broadcast(message,connection):
@@ -76,6 +76,7 @@ while True:
 	connection,address = server_socket.accept()
 	connection.sendall("Hello 1 \n".encode('utf-8'))
 	print("%s:%s is connected" % address)
+	client_list.append(connection)
 	new_connection = threading.Thread(target = client_connection,args=(connection,address))
 	new_connection.start()
 	
