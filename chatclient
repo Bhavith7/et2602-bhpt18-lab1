@@ -4,7 +4,7 @@ import select
 import sys
 #Checking for sufficient arguments
 if len(sys.argv)!=3:
-	print("python chatclient ip:port nickname")
+	print("./chatclient ip:port nickname")
 	sys.exit(1)
 
 client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
@@ -21,7 +21,8 @@ res1 = client_socket.recv(1024).decode("utf-8")
 print(res1)
 
 #Sending nickname
-client_socket.sendall('NICK '+nickname.encode('utf-8'))
+nick = 'NICK '+nickname
+client_socket.sendall(nick.encode('utf-8'))
 res2 = client_socket.recv(1024).decode("utf-8")
 print(res2)
 if res2 == 'ERROR malformed command':
@@ -46,10 +47,10 @@ while True:
 			else:
 				msg = sys.stdin.readline()
 				if msg == '\n':
-                           		continue
-           			else:
-								   		
-					client_socket.sendall('MSG '+msg.encode('utf-8'))
+					continue;
+				else:
+					message = 'MSG '+msg
+					client_socket.sendall(message.encode('utf-8'))
 
 	except KeyboardInterrupt:
                     break
