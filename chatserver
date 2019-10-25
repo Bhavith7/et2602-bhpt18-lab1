@@ -6,7 +6,7 @@ import re
 
 #Checking for sufficient arguments
 if(len(sys.argv)!=2):
-	print("python chatserver ip:port")
+	print("./chatserver ip:port")
 	sys.exit()
 
 
@@ -35,9 +35,9 @@ def client_connection(connection,address):
 	nickname = connection.recv(1024).decode('utf-8')
 	nick = nickname.replace('NICK ','')
 	if len(nick)<=12 and re.match("^[A-Za-z0-9\_]+$",nick) is not None:
-		connection.sendall('OK \n'.encode('utf-8'))
+		connection.send('OK \n'.encode('utf-8'))
 	else:
-		connection.sendall('ERROR malformed command \n'.encode('utf-8'))
+		connection.send('ERROR malformed command \n'.encode('utf-8'))
 		client_list.remove(connection)
 		
 	
@@ -51,25 +51,26 @@ def client_connection(connection,address):
 				break
 			else:
 				if len(msg) > 255 and re.match("^[A-za-z0-9\_]*$", msg) is not None:
-					connection.sendall('ERROR malformed message'.encode('utf-8'))
+					connection.send('ERROR malformed message'.encode('utf-8'))
 					response = 'ERROR malformed message' + msg
 				else :
 					response = "MSG "+ nick +" "+ msg
 					#print response
 					broadcast(response,connection)
 		except KeyboardInterrupt:
+			connection.close()
 			break
 
 
 def broadcast(message,connection):
 	for sockets in client_list:
-		 if sockets != server_socket:
-            		try:
-                		sockets.sendall(message.encode('utf-8'))
-            		except KeyboardInterrupt:
-				sockets.close()
-				remove(sockets)
+		if sockets != server_socket:
+			try:
+				sockets.send(message.encode('utf-8'))
+			except KeyboardInterrupt:
+				client_list.remove(sockets)
 				break
+
 				
 
 while True:
