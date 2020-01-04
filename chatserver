@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import socket
 import sys
-import threading
+from _thread import *
 import re
 
 #Checking for sufficient arguments
@@ -15,15 +15,15 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 
-cmds = str(sys.argv[1]).split(':')
-ip = str(cmds[0])
-port = int(cmds[1])
+cmd = str(sys.argv[1]).split(':')
+ip = str(cmd[0])
+port = int(cmd[1])
 
 #Binds the server to entered ip address,port
 server_socket.bind((ip,port))
 
 #Listen to clients
-server_socket.listen(10)
+server_socket.listen(100)
 print("Server-listening:Waiting for connections")
 
 client_list=[]
@@ -40,25 +40,29 @@ def client_connection(connection,address):
 		connection.sendall('ERROR no nickname set'.encode('utf-8'))
 	else:
 		connection.sendall('ERROR malformed command \n'.encode('utf-8'))
+		connection.close()		
 		client_list.remove(connection)
+		del client_list[connection]
+
 		
 	
 	while True:
 		try:		
-			message = connection.recv(2048).decode('utf-8')
-			msg = message.replace('MSG ','')
+			if connection in client_list:
+				message = connection.recv(2048).decode('utf-8')
+				msg = message.replace('MSG ','')
 		
-			if not msg:
-				connection.close()
-				break
-			else:
-				if len(msg) > 255 and re.match("^[A-za-z0-9\_]*$", msg) is not None:
-					connection.sendall('ERROR malformed message'.encode('utf-8'))
-					response = 'ERROR malformed message' + msg
-				else :
-					response = "MSG "+ nick +" "+ msg
-					#print response
-					broadcast(response,connection)
+				if not msg:
+					connection.close()
+					client_list.remove(connection)
+					break
+				else:
+					if len(msg) > 255 and re.match("^[A-za-z0-9\_]*$", msg) is not None:
+						connection.sendall('ERROR malformed message'.encode('utf-8'))
+						response = 'ERROR malformed message' + msg
+					else :
+						response = "MSG "+ nick +" "+ msg
+						broadcast(response,connection)
 		except KeyboardInterrupt:
 			connection.close()
 			break
@@ -80,9 +84,7 @@ while True:
 	connection.sendall("Hello 1 \n".encode('utf-8'))
 	print("%s:%s is connected" % address)
 	client_list.append(connection)
-	new_connection = threading.Thread(target = client_connection,args=(connection,address))
-	new_connection.start()
-	
-	
+	start_new_thread(client_connection,(connection,address))
+
+connection.close()	
 server_socket.close()
-					
