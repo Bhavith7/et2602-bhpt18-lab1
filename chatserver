@@ -80,11 +80,13 @@ def broadcast(message,connection):
 				
 
 while True:
-	connection,address = server_socket.accept()
-	connection.sendall("Hello 1 \n".encode('utf-8'))
-	print("%s:%s is connected" % address)
-	client_list.append(connection)
-	start_new_thread(client_connection,(connection,address))
-
+	try:
+		connection,address = server_socket.accept()
+		connection.sendall("Hello 1 \n".encode('utf-8'))
+		print("%s:%s is connected" % address)
+		client_list.append(connection)
+		start_new_thread(client_connection,(connection,address))
+	except KeyboardInterrupt:
+		break
 connection.close()	
 server_socket.close()
